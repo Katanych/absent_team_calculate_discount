@@ -1,5 +1,5 @@
 '''Место для импортирования модулей'''
-from data import *
+from datasets import *
 
 
 class Crypto_calc(object):
@@ -19,6 +19,35 @@ class Crypto_calc(object):
         self.token = token
         self.num_tokens = num_tokens
         self.token2 = token2
+        self.token_info = self.__get_token_info(CEXS, DEXS, SPECIFICS, DATA)
+    
+    def get_token(self):
+        return self.token
+    
+    def get_num_tokens(self):
+        return self.num_tokens
+
+    def get_token2(self):
+        return self.token2
+
+    def __get_token_info(self, cexs, dexs, specifics, data):
+        '''Функция составляет полную информацию о токене'''
+
+        token = dict()
+        token["CEX"] = dict()
+        i = 0
+        for CEX in cexs:
+            token["CEX"][CEX] = dict()
+            for spec in specifics:
+                token["CEX"][CEX][spec] = data[i]
+                i += 1
+        token["DEX"] = dict()
+        for DEX in dexs:
+            token["DEX"][DEX] = dict()
+            for spec in specifics:
+                token["DEX"][DEX][spec] = data[i]
+                i += 1
+        return token
 
     def total_order_price(self):
         '''Оптимальная общая стоимость сделки'''
@@ -54,9 +83,9 @@ class Crypto_calc(object):
         '''
 
         max_price = 0
-        for stock in TOKEN[type_stock]:
-            if float(TOKEN[type_stock][stock]["price"]) > max_price:
-                max_price = float(TOKEN[type_stock][stock]["price"])
+        for stock in self.token_info[type_stock]:
+            if float(self.token_info[type_stock][stock]["price"]) > max_price:
+                max_price = float(self.token_info[type_stock][stock]["price"])
         
         return float(max_price) * self.num_tokens
 
@@ -69,12 +98,12 @@ class Crypto_calc(object):
         '''
 
         total_sum = 0.
-        for stock in TOKEN["CEX"]:
-            total_sum += float(TOKEN["CEX"][stock]["volume"])
+        for stock in self.token_info["CEX"]:
+            total_sum += float(self.token_info["CEX"][stock]["volume"])
         
         result_cost = 0
-        for stock in TOKEN["CEX"]:
-            coef_prior = (float(TOKEN["CEX"][stock]["volume"])) / total_sum
+        for stock in self.token_info["CEX"]:
+            coef_prior = (float(self.token_info["CEX"][stock]["volume"])) / total_sum
             result_cost += coef_prior * self.ideal_price("CEX")
         
         # Уменьшаем на 40%
@@ -86,12 +115,12 @@ class Crypto_calc(object):
         '''Конечная цена при переплате на 40%'''
 
         total_sum = 0.
-        for stock in TOKEN["CEX"]:
-            total_sum += float(TOKEN["CEX"][stock]["volume"])
+        for stock in self.token_info["CEX"]:
+            total_sum += float(self.token_info["CEX"][stock]["volume"])
         
         result_cost = 0
-        for stock in TOKEN["CEX"]:
-            coef_prior = (float(TOKEN["CEX"][stock]["volume"])) / total_sum
+        for stock in self.token_info["CEX"]:
+            coef_prior = (float(self.token_info["CEX"][stock]["volume"])) / total_sum
             result_cost += coef_prior * self.ideal_price("CEX")
         
         # Уменьшаем на 40%
