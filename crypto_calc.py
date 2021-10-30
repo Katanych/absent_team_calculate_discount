@@ -4,10 +4,20 @@
 class Crypto_calc(object):
     '''Класс крипто-калькулятора'''
 
-    def __init__(self, token, num_tokens, token_to_exch):
+    def __init__(self, token, num_tokens, token2="BTC"):
+        '''Конструктор инициализирующий все атрибуты класса.
+
+        Класс обладает тремя атрибутами:
+        token - имя токена представленного к продаже.
+        num_tokens - количество токенов к продаже.
+        token2 - имя токена, на котрый будет произведен обмен.
+        По умолчанию мы обмениваем на биткоин.
+        
+        '''
+
         self.token = token
         self.num_tokens = num_tokens
-        self.token_to_exch = token_to_exch
+        self.token2 = token2
 
     def price_p2p(self):
         '''Цена peer-to-peer сделки для продающего'''
@@ -24,38 +34,39 @@ class Crypto_calc(object):
 
         pass
 
-    def get_price_new_tokens_after_exch_on_CEX(self):
-        '''Функция возвращает стоимость новых токенов'''
+    def get_converted_price(self):
+        '''Функция возвращает стоимость новых токенов на CEX
+        
+        Функция возвращает общую стоимость токенов, на которую был
+        соврешен обмен (token2)
+        
+        '''
+
         pass
 
-
-    def __convert_on_CEX(self, stocks=['Binance'], ):
-        '''Функция возвращает стоимость токена, на который обменяли.
+    def convert_price(self, stocks=['Binance'], ):
+        '''Функция возвращает стоимость токенов, на который обменяли.
         
         Количество валют, которые мы получим при продаже
-        набора токенов на одной централизованной бирже CEX
-        за один вечер.
+        набора токенов на нескольких централизованных биржах CEX 
+        (stocks) за один вечер.
         
         '''
 
         sum = 0
         for stock in stocks:
+            # Суммируем стоимость, полученную с каждой биржи 
             sum += self.__calc_end_cost(stock)
             
         return sum
 
     def __calc_end_cost(self, stock):
-        '''Функция подсчитывает конечную цену проданных токенов.
-
-        Функция подсчитывает, сколько валюты мы получим, если
-        продадим N токенов на бирже B. 
+        '''Функция подсчитывает конечную цену проданных токенов на бирже'''
         
-        '''
-
         pass
 
-    def __num_tokens_to_sale_on_CEX(self, stock):
-        '''Количество токенов к продаже на бирже'''
+    def __num_tokens_to_sale(self, stock):
+        '''Количество токенов к продаже на конкретной бирже'''
 
         pass
 
