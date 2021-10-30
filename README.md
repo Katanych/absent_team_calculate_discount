@@ -1,2 +1,2 @@
-# absent_team_calculate_discount
+# Калькулятор скидки
 Команда: "Отсутствует" (Absent)
