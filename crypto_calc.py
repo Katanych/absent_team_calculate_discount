@@ -19,7 +19,8 @@ class Crypto_calc(object):
         self.token = token
         self.num_tokens = num_tokens
         self.token2 = token2
-        self.token_info = self.__get_token_info(CEXS, DEXS, SPECIFICS, DATA)
+        self.token_info = self.__get_token_info(CEXS, DEXS, SPECIFICS, DATA_CEX)
+        self.end_price_token = None
     
     def get_token(self):
         return self.token
@@ -29,24 +30,28 @@ class Crypto_calc(object):
 
     def get_token2(self):
         return self.token2
+    
+    def get_token_info(self):
+        return self.token_info
+    
+    def get_end_price_token(self):
+        return self.token_end_price
 
     def __get_token_info(self, cexs, dexs, specifics, data):
         '''Функция составляет полную информацию о токене'''
 
         token = dict()
         token["CEX"] = dict()
-        i = 0
-        for CEX in cexs:
+        for i, CEX in enumerate(cexs):
             token["CEX"][CEX] = dict()
-            for spec in specifics:
-                token["CEX"][CEX][spec] = data[i]
-                i += 1
-        token["DEX"] = dict()
-        for DEX in dexs:
-            token["DEX"][DEX] = dict()
-            for spec in specifics:
-                token["DEX"][DEX][spec] = data[i]
-                i += 1
+            for j, spec in enumerate(specifics):
+                token["CEX"][CEX][spec] = data[i][j]
+        # token["DEX"] = dict()
+        # for DEX in dexs:
+        #     token["DEX"][DEX] = dict()
+        #     for spec in specifics:
+        #         token["DEX"][DEX][spec] = data[i]
+        #         i += 1
         return token
 
     def total_order_price(self):
@@ -68,11 +73,6 @@ class Crypto_calc(object):
 
         cost_disc = self.ideal_price("CEX") - self.total_order_price()
         return (cost_disc * 100) / self.ideal_price("CEX")
-
-    def price_token(self):
-        '''Цена токена'''
-
-        pass
     
     def ideal_price(self, type_stock):
         '''Функция идеальной цены, если бы мы продали по курсу.
@@ -89,7 +89,7 @@ class Crypto_calc(object):
         
         return float(max_price) * self.num_tokens
 
-    def sell_to_CEX(self):
+    def sell_to_CEX(self, procent_lose=None):
         '''Конечная цена при потери в 40% на CEX.
         
         Здесь будет описан алгоритм получения сконвертированной цены
@@ -102,16 +102,36 @@ class Crypto_calc(object):
             total_sum += float(self.token_info["CEX"][stock]["volume"])
         
         result_cost = 0
+        coefs_prior = []
         for stock in self.token_info["CEX"]:
             coef_prior = (float(self.token_info["CEX"][stock]["volume"])) / total_sum
+            coefs_prior.append(coef_prior)
             result_cost += coef_prior * self.ideal_price("CEX")
         
-        # Уменьшаем на 40%
-        result_cost = (result_cost * 60) / 100.
+        if procent_lose is None:
+            result_cost = 0
+            for coef, stock in enumerate(self.token_info["CEX"]):
+                cost = 0
+                num_to_sale = self.num_tokens * coefs_prior[coef]
+                num_cup = int(num_to_sale // self.token_info["CEX"][stock]["num_tokens"] + 1)
+                num_offer_on_cup = num_to_sale / num_cup
+                print(self.token_info["CEX"][stock]["price_max"])
+                price_max = float(self.token_info["CEX"][stock]["price_max"])
+                price_min = float(self.token_info["CEX"][stock]["price_min"])
+                mid_price = (price_max + price_min) / 2
+                delta = price_max - price_min
+                for i in range(num_cup):
+                    cost += mid_price * num_offer_on_cup
+                    mid_price -= delta
+                self.token_end_price = mid_price
+                result_cost += cost * coefs_prior[coef]
+        else:
+            # Уменьшаем на 40%
+            result_cost = (result_cost * 140) / 100.
 
         return result_cost
     
-    def buy_to_CEX(self):
+    def buy_to_CEX(self, procent_lose=None):
         '''Конечная цена при переплате на 40%'''
 
         total_sum = 0.
@@ -123,8 +143,7 @@ class Crypto_calc(object):
             coef_prior = (float(self.token_info["CEX"][stock]["volume"])) / total_sum
             result_cost += coef_prior * self.ideal_price("CEX")
         
-        # Уменьшаем на 40%
-        result_cost = (result_cost * 140) / 100.
+
 
         return result_cost
         

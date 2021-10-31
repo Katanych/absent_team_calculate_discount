@@ -9,7 +9,7 @@ def main():
     calc = Crypto_calc(TOKEN, NUM_TOKENS, TOKEN_TO_EXCH)
     discont = calc.optimal_discount()
     end_price_p2p = calc.total_order_price()
-    end_price_token = calc.price_token()
+    end_price_token = calc.get_end_price_token()
     print("Размер скидки для покупателя:", discont, \
         "\nКонечная цена peer-to-peer сделки:", end_price_p2p, \
             "\nКонечная цена токена:", end_price_token)
