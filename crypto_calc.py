@@ -7,11 +7,15 @@ class Crypto_calc(object):
     def __init__(self, token, num_tokens, token2="BTC"):
         '''Конструктор инициализирующий все атрибуты класса.
 
-        Класс обладает тремя атрибутами:
+        Класс обладает тремя ключевыми атрибутами:
         token - имя токена представленного к продаже.
         num_tokens - количество токенов к продаже.
         token2 - имя токена, на котрый будет произведен обмен.
-        По умолчанию мы обмениваем на биткоин.
+        По умолчанию мы обмениваем на USDT.
+
+        И двумя дополнительными атрибутами:
+        token_info - информация о токене.
+        end_price_token - переменная результата вычислений.
         
         '''
 
@@ -45,12 +49,6 @@ class Crypto_calc(object):
             token["CEX"][CEX] = dict()
             for j, spec in enumerate(specifics):
                 token["CEX"][CEX][spec] = data[i][j]
-        # token["DEX"] = dict()
-        # for DEX in dexs:
-        #     token["DEX"][DEX] = dict()
-        #     for spec in specifics:
-        #         token["DEX"][DEX][spec] = data[i]
-        #         i += 1
         return token
 
     def total_order_price(self):
@@ -80,6 +78,7 @@ class Crypto_calc(object):
         курса (средней цены продаж) на бирже.
         
         '''
+
         if type_stock == "CEX":
             max_price = 0
             for stock in self.token_info[type_stock]:
@@ -138,11 +137,7 @@ class Crypto_calc(object):
         return result_cost
         
     def sell_to_DEX(self):
-        '''Конечная цена при продаже на DEX.
-        
-        Определяется с помощью готового инструмента.
-        
-        '''
+        '''Конечная цена при продаже на DEX'''
 
         result_cost = 0
         for stock in DEXS.keys():
