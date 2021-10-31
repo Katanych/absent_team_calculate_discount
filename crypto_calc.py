@@ -81,13 +81,21 @@ class Crypto_calc(object):
         курса (средней цены продаж) на бирже.
         
         '''
-
-        max_price = 0
-        for stock in self.token_info[type_stock]:
-            if float(self.token_info[type_stock][stock]["price"]) > max_price:
-                max_price = float(self.token_info[type_stock][stock]["price"])
-        
-        return float(max_price) * self.num_tokens
+        if type_stock == "CEX":
+            max_price = 0
+            for stock in self.token_info[type_stock]:
+                if float(self.token_info[type_stock][stock]["price"]) > max_price:
+                    max_price = float(self.token_info[type_stock][stock]["price"])
+            return float(max_price) * self.num_tokens
+        elif type_stock == "DEX":
+            max_price = 0
+            type_stock = "CEX"
+            for stock in self.token_info[type_stock]:
+                if float(self.token_info[type_stock][stock]["price"]) > max_price:
+                    max_price = float(self.token_info[type_stock][stock]["price"])
+            return float(max_price) * self.num_tokens
+        else:
+            print("Exception! Нет больше типов бирж")
 
     def sell_to_CEX(self, procent_lose=None):
         '''Конечная цена при потери в 40% на CEX.
@@ -115,12 +123,11 @@ class Crypto_calc(object):
                 num_to_sale = self.num_tokens * coefs_prior[coef]
                 num_cup = int(num_to_sale // self.token_info["CEX"][stock]["num_tokens"] + 1)
                 num_offer_on_cup = num_to_sale / num_cup
-                print(self.token_info["CEX"][stock]["price_max"])
-                price_max = float(self.token_info["CEX"][stock]["price_max"])
-                price_min = float(self.token_info["CEX"][stock]["price_min"])
+                price_max = self.token_info["CEX"][stock]["price_max"]
+                price_min = self.token_info["CEX"][stock]["price_min"]
                 mid_price = (price_max + price_min) / 2
                 delta = price_max - price_min
-                for i in range(num_cup):
+                for _ in range(num_cup):
                     cost += mid_price * num_offer_on_cup
                     mid_price -= delta
                 self.token_end_price = mid_price
@@ -128,22 +135,6 @@ class Crypto_calc(object):
         else:
             # Уменьшаем на 40%
             result_cost = (result_cost * 140) / 100.
-
-        return result_cost
-    
-    def buy_to_CEX(self, procent_lose=None):
-        '''Конечная цена при переплате на 40%'''
-
-        total_sum = 0.
-        for stock in self.token_info["CEX"]:
-            total_sum += float(self.token_info["CEX"][stock]["volume"])
-        
-        result_cost = 0
-        for stock in self.token_info["CEX"]:
-            coef_prior = (float(self.token_info["CEX"][stock]["volume"])) / total_sum
-            result_cost += coef_prior * self.ideal_price("CEX")
-        
-
 
         return result_cost
         
@@ -154,19 +145,32 @@ class Crypto_calc(object):
         
         '''
 
-        pass
-    
-    def buy_to_DEX(self):
-        pass
+        result_cost = 0
+        for stock in DEXS.keys():
+            result_cost += DEXS[stock]
+        result_cost /= len(DEXS.keys())
 
-    def __calc_end_cost(self, stock):
-        '''Функция подсчитывает конечную цену проданных токенов на бирже'''
-         
-        pass
+        return result_cost
 
-    def __num_tokens_to_sale(self, stock):
-        '''Количество токенов к продаже на конкретной бирже'''
+    def get_rate(self, result_cost_USD):
+        return VALUES_RATE[self.token2] * result_cost_USD
 
-        pass
+    def calculate_result(self):
+        return self.optimal_discount(), self.total_order_price(), self.get_end_price_token()
 
-
+    def show_analitic(self):
+        print("Входные значения:")
+        print("Токен к продаже:", self.token, \
+            "\nКоличество токенов к продаже:", self.num_tokens, \
+                "\nТокен к получению:", self.token2)
+                
+        print("\nВыходные значения:")
+        print("Размер скидки для покупателя:", self.optimal_discount(), "%", \
+            "\nКонечная цена peer-to-peer сделки:", self.get_rate(self.total_order_price()), self.token2, \
+                "\nКурс токена после падения:", self.get_end_price_token())
+        
+        print("\nРасширенная информация:"),
+        print("Сколько получишь при продаже токенов на CEX:", self.sell_to_CEX(), \
+                "\nСколько получишь при продаже токенов на DEX:", self.sell_to_DEX(), \
+                    "\nИдельная цена продажи токенов по курсу:", self.ideal_price("CEX"), self.token2, \
+                        "\nРыночная стоимость исходного токена:", self.token_info["CEX"]["Binance"]["price"], "USDT")
